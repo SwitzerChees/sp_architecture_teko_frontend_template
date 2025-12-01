@@ -1,22 +1,24 @@
 # Build stage
-FROM node:22-alpine AS builder
+FROM oven/bun AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install
+COPY package.json ./
+COPY bun.lock ./
+RUN bun install
 
 COPY . .
-RUN npm run build
+RUN bun run build
 
 # Production stage
-FROM node:22-alpine
+FROM oven/bun
 
 WORKDIR /app
 
 COPY --from=builder /app/.output ./.output
 COPY --from=builder /app/.nuxt ./.nuxt
-COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/bun.lock ./
 
 ENV NUXT_HOST=0.0.0.0
 ENV NUXT_PORT=4000
@@ -24,4 +26,4 @@ ENV NITRO_PORT=4000
 
 EXPOSE 4000
 
-CMD ["node", ".output/server/index.mjs"]
+CMD ["bun", ".output/server/index.mjs"]
